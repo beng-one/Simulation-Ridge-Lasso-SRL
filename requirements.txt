@@ -1,0 +1,19 @@
+# Manipulation des données
+math
+numpy
+pandas
+
+# Visualitation
+matplotlib
+seaborn
+
+# Modèles de régression
+sklearn
+
+# Vérification des résultats de sklearn
+statsmodels
+cvxopt
+
+# Répertoire de travail et gestion d'erreur
+os
+warnings
