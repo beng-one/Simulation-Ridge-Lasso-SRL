@@ -20,6 +20,7 @@ View(data)
 # Régression Ridge
 RegRidge <- linearRidge(y ~ ., data = data, lambda = 0.15, scaling = 'scale')
 RidgeSummary <- summary(RegRidge)
+RidgeSummary
 
 # Stargazer
 #stargazer(RidgeSummary)

@@ -1,5 +1,4 @@
 # Manipulation des données
-math
 numpy
 pandas
 
@@ -8,12 +7,8 @@ matplotlib
 seaborn
 
 # Modèles de régression
-sklearn
+scikit-learn
 
 # Vérification des résultats de sklearn
 statsmodels
 cvxopt
-
-# Répertoire de travail et gestion d'erreur
-os
-warnings
