@@ -131,7 +131,7 @@ def simulation_X_y(PopulationSize=1000, FeatureNumber=8, Coefs_B = [1,2,3,4,5,6,
 
     '''
     Objectif:
-     ---------
+    ----------
     Fonction pour simuler les données d'entrées X et la variable y
 
     Arguments:
@@ -224,3 +224,115 @@ def sampling(dataframe_population, SampleSize, SaveOptionPath, Random_State_Seed
     dataframe_sample.to_csv(f"{SaveOptionPath}/data_sample.csv", index=False)
 
     return dataframe_sample
+
+# Fonction pour ajuster le modèle de régression régularisée de LASSO en fonction des valeurs de alpha
+def ridge_finetuning(Predictors, Target, Alpha_list, Intercept, Random_State_Seed):
+
+    '''
+    Objectif:
+    ---------
+    Fonction pour trouver les hyperparamètres de la régression deRidge en fonction de alpha et de l'intercept.
+
+    Arguments:
+    ----------
+    Predictors : Variables d'entrée (-->pd.dataframe)
+    Target : Variable cible (-->pd.dataframe)
+    Alpha_list : Coefficients de pénalisation (-->list)
+    Intercept : Constante du modèle (-->bool)
+    Random_State_Seed : noyau pour la réproductibilité des données simulées (-->float or None)
+    '''
+
+    # Importation de la librairie Ridge de sklearn
+    import sklearn
+    from sklearn.linear_model import Ridge
+
+    # Vérification des types des arguments
+    if not isinstance(Predictors, pd.DataFrame):
+        raise AttributeError("Le type de 'Predictors' n'est pas le bon. Il doit être de type 'pd.DataFrame'.")
+    if not isinstance(Target, np.ndarray):
+        raise AttributeError("Le type de 'Target' n'est pas le bon. Il doit être de type 'np.ndarray.")
+    if not isinstance(Alpha_list, np.ndarray):
+        raise AttributeError("Le type de 'Alpha_list' n'est pas le bon. Il doit être de type 'np.ndarray'.")
+    if not isinstance(Intercept, bool):
+        raise AttributeError("Le type de 'Intercept' n'est pas le bon. Il doit être de type 'bool'.")
+    if not isinstance(Random_State_Seed, int):
+        raise AttributeError("Le type de 'Random_State_Seed' n'est pas le bon. Il doit être de type 'int'. ")
+
+    # Création du dataframe
+    Predictors_names = list(Predictors.columns)
+    Predictors_names.insert(0, 'Intercept')
+    summary_coef = pd.DataFrame({'Variables': Predictors_names})
+
+    # Modèle de régression Ridge en fonction de alpha
+    for alpha_elem in Alpha_list:
+        # Modèle de Régression Régularisée Ridge
+        Ridge_model = Ridge(alpha=alpha_elem, fit_intercept=Intercept, random_state=Random_State_Seed)
+        Ridge_model.fit(Predictors, Target)
+
+        # Résultats du modèles : Intercept et coefficients estimés
+        result_intercept = Ridge_model.intercept_
+        result_coefficients = Ridge_model.coef_
+        result_complete = np.insert(result_coefficients, 0, result_intercept)
+
+        # Mise à jour du dataframe
+        alpha_elem_name = f"Ridge_Alpha_{alpha_elem}"
+        summary_coef[alpha_elem_name] = result_complete
+
+    return summary_coef
+
+# Fonction pour ajuster le modèle de régression régularisée LASSO en fonction des valeurs de alpha
+def lasso_finetuning(Predictors, Target, Alpha_list, Intercept, Random_State_Seed):
+
+    '''
+    Objectif:
+    ---------
+    Fonction pour trouver les hyperparamètres de la régression LASSO en fonction de alpha et de l'intercept
+
+    Arguments:
+    ----------
+    Predictors : Variables d'entrée (-->pd.dataframe)
+    Target : Variable cible (-->pd.dataframe)
+    Alpha_list : Coefficients de pénalisation (-->list)
+    Intercept : Constante du modèle (-->bool)
+    Random_State_Seed : noyau pour la réproductibilité des données simulées (-->float or None)
+    '''
+
+    # Importation de la librairie Ridge de sklearn
+    import sklearn
+    from sklearn.linear_model import Lasso
+
+    # Vérification des types des arguments
+    if not isinstance(Predictors, pd.DataFrame):
+        raise AttributeError("Le type de 'Predictors' n'est pas le bon. Il doit être de type 'pd.DataFrame'.")
+    if not isinstance(Target, np.ndarray):
+        raise AttributeError("Le type de 'Target' n'est pas le bon. Il doit être de type 'np.ndarray.")
+    if not isinstance(Alpha_list, np.ndarray):
+        raise AttributeError("Le type de 'Alpha_list' n'est pas le bon. Il doit être de type 'np.ndarray'.")
+    if not isinstance(Intercept, bool):
+        raise AttributeError("Le type de 'Intercept' n'est pas le bon. Il doit être de type 'bool'.")
+    if not isinstance(Random_State_Seed, int):
+        raise AttributeError("Le type de 'Random_State_Seed' n'est pas le bon. Il doit être de type 'int'. ")
+
+
+    # Création du dataframe
+    Predictors_names = list(Predictors.columns)
+    Predictors_names.insert(0,'Intercept')
+    summary_coef = pd.DataFrame({'Variables': Predictors_names})
+
+    # Modèle de régression Ridge en fonction de alpha
+    for alpha_elem in Alpha_list:
+
+        # Modèle de Régression Régularisée Ridge
+        Lasso_model = Lasso(alpha=alpha_elem, fit_intercept=Intercept, random_state=Random_State_Seed)
+        Lasso_model.fit(Predictors, Target)
+
+        # Résultats du modèles : Intercept et coefficients estimés
+        result_intercept = Lasso_model.intercept_
+        result_coefficients = Lasso_model.coef_
+        result_complete = np.insert(result_coefficients, 0, result_intercept)
+
+        # Mise à jour du dataframe
+        alpha_elem_name = f"Ridge_Alpha_{alpha_elem}"
+        summary_coef[alpha_elem_name] = result_complete
+
+    return summary_coef
