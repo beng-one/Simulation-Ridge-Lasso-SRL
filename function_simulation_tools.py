@@ -95,7 +95,7 @@ def statistics_residus(Residus):
 
 
 # Fonction pour analyser les residus à partir des visualisations.
-def visualization_residus(Residus, Figure):
+def visualization_residus(Residus, Figure, SaveOptionPath):
     '''
     Objectif:
     ---------
@@ -103,14 +103,17 @@ def visualization_residus(Residus, Figure):
 
     Arguments:
     ----------
-    Residus : Données des residus (-->np.array)
-    Figure : Type de figure souhaite
+    Residus : Données des residus (-->np.ndarray)
+    Figure : Type de figure souhaite (-->str)
+    SaveOptionPath : Chemin utilisé pour la sauvegarde de la figure (-->str)
     '''
 
     if not isinstance(Residus, np.ndarray):
         raise TypeError("Le type de 'Residus' n'est pas le bon. Il doit être de type 'np.ndarray'")
     if not isinstance(Figure, str):
         raise TypeError("Le type de 'Figure' n'est pas le bon. Il doit être de type 'str'")
+    if not isinstance(SaveOptionPath, str):
+        raise TypeError("Le type de 'SaveOptionPath' n'est pas le bon. Il doit être de type 'str'")
 
 
 
@@ -125,6 +128,8 @@ def visualization_residus(Residus, Figure):
         xmin, xmax, ymin, ymax = plt.axis()
         plt.title(f"Histogramme des residus simulés")
         plt.text(xmax * (1-0.05), ymax * (1-0.05),f"N={Nombre}\n $\\mu$={Moyenne} \n $\\sigma^{2}$={Var}", ha='right', va='top')
+        plt.grid(True, alpha=0.25, linestyle='--')
+        plt.savefig(f"{SaveOptionPath}/visualisation_histogramme_residus.png")
         return plt.plot()
 
     Q25 = round(np.quantile(Residus, 0.25),3)
@@ -135,6 +140,8 @@ def visualization_residus(Residus, Figure):
     if Figure == 'Boxplot':
         sns.boxplot(Residus)
         plt.title(f"Boxplot des residus simulés")
+        plt.grid(True, alpha=0.25, linestyle='--')
+        plt.savefig(f"{SaveOptionPath}/visualisation_boxplot_residus.png")
         return plt.plot()
 
     else:
@@ -309,7 +316,7 @@ def regularized_regressions(Predictors, Target, Alpha_list, Intercept, Model, Ra
     Target : Variable cible (-->pd.dataframe)
     Alpha_list : Coefficients de pénalisation (-->list)
     Intercept : Constante du modèle (-->bool)
-    model : Modèle de régression pénalisée : Ridge, Lasso (-->str)
+    Model : Modèle de régression pénalisée : Ridge, Lasso (-->str)
     Random_State_Seed : noyau pour la réproductibilité des données simulées (-->float or None)
 
     '''
@@ -362,7 +369,7 @@ def regularized_regressions(Predictors, Target, Alpha_list, Intercept, Model, Ra
     return summary_coef
 
 # Fonction pour visualiser le retrecissement des coefficients en fonction de lambda
-def visualization_shrinking(Summary_Coefficients_Lambda):
+def visualization_shrinking(Summary_Coefficients_Lambda, color_palet='tab10', Model='ridge', SaveOptionPath=''):
     '''
 
     Objectif:
@@ -372,10 +379,20 @@ def visualization_shrinking(Summary_Coefficients_Lambda):
     Arguments:
     ----------
     Summary_Coefficients_Lambda : Tableau de synthèse des coeffiients de régression et des paramètres de pénalisation (-->pd.dataframe)
+    color_palet : Palette de couleurs de Matplotlib https://matplotlib.org/stable/users/explain/colors/colormaps.html (-->str)
+    Model : Modèle de régression pénalisée : Ridge, Lasso (-->str)
+    SaveOptionPath : Chemin utilisé pour la sauvegarde de la figure (-->str)
 
     '''
     if not isinstance(Summary_Coefficients_Lambda, pd.DataFrame):
         raise TypeError("Le type de 'Summary_Coefficients_Lambda' n'est pas le bon. Il doit être de type 'pd.DataFrame'.")
+    if not isinstance(color_palet, str):
+        raise TypeError("Le type de 'color_palet' n'est pas le bon. Il doit être de type 'str'.")
+    if not isinstance(Model, str):
+        raise TypeError("Le type de 'Model' n'est pas le bon. Il doit être de type 'str'. ")
+    if not isinstance(SaveOptionPath, str):
+        raise TypeError("Le type de 'SaveOptionPath' n'est pas le bon. Il doit être de type 'str'")
+
 
     # Manipulation de la base de données
     df = pd.DataFrame(Summary_Coefficients_Lambda)
@@ -384,7 +401,7 @@ def visualization_shrinking(Summary_Coefficients_Lambda):
 
     # Sélection de la palette de couleurs
     cmaps = plt.colormaps
-    colors = cmaps.get_cmap('tab10').resampled(df_T.shape[1]).colors
+    colors = cmaps.get_cmap(color_palet).resampled(df_T.shape[1]).colors
 
     # Visualisation
     fig, axs = plt.subplots()  # Automatisatio de figsize
@@ -399,5 +416,6 @@ def visualization_shrinking(Summary_Coefficients_Lambda):
     plt.ylabel("Coefficients")
     plt.grid(True, alpha=0.25, linestyle='--')
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.savefig(f"{SaveOptionPath}/visualisation_coefficient_shrinkage_{Model}.png")
     plt.show()
 
