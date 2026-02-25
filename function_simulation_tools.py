@@ -341,7 +341,15 @@ def regularized_regressions(Predictors, Target, Alpha_list, Intercept, Model, Ra
 
     # Création du dataframe
     Predictors_names = list(Predictors.columns)
-    Predictors_names.insert(0,'Intercept')
+
+    # Intégration de l'intercept dans le vecteur des coefficients de régression
+    if Intercept == True:
+        Predictors_names.insert(0, 'Intercept')
+    elif Intercept == False:
+        Predictors_names = Predictors_names
+    else:
+        raise ValueError(f"La valeurs associée à l'argument args: Intercept est incorrecte")
+
     summary_coef = pd.DataFrame({'Variables': Predictors_names})
 
     # Modèle de régression Ridge en fonction de alpha
@@ -360,12 +368,18 @@ def regularized_regressions(Predictors, Target, Alpha_list, Intercept, Model, Ra
         penalized_model.fit(Predictors, Target)
         result_intercept = penalized_model.intercept_
         result_coefficients = penalized_model.coef_
-        result_complete = np.insert(result_coefficients, 0, result_intercept)
+
+        # Intégration de l'intercept dans le vecteur des coefficients de régression
+        if Intercept == True:
+            result_complete = np.insert(result_coefficients, 0, result_intercept)
+        elif Intercept == False:
+            result_complete = result_coefficients
+        else:
+            raise ValueError(f"La valeurs associée à l'argument args: Intercept est incorrecte")
 
         # Mise à jour du dataframe
         alpha_elem_name = f"{alpha_elem}"
         summary_coef[alpha_elem_name] = result_complete
-
     return summary_coef
 
 # Fonction pour visualiser le retrecissement des coefficients en fonction de lambda
@@ -419,3 +433,53 @@ def visualization_shrinking(Summary_Coefficients_Lambda, color_palet='tab10', Mo
     plt.savefig(f"{SaveOptionPath}/visualisation_coefficient_shrinkage_{Model}.png")
     plt.show()
 
+# Fonction pour calculer l'erreur de prédiction
+def residual_sum_square(Variables_Selected, Alpha, Summary_coefficients, Obs_True, Inputs):
+
+    '''
+    Objectif:
+    ---------
+    Fonction pour calculer les residus du modèle en procédant à une sélection des variables prédites ou pas.
+
+    Arguments:
+    ----------
+    Variables_Selected : Liste associée aux variables prédites sélectionnées (-->list)
+    Alpha : Paramètre permettant de sélectionner les coefficients en fonction du coefficients de pénalisation (-->str)
+    Summary_coefficients : Synthèse des coefficients de régression estimés en fonction des coefficients de pénalisation (-->pd.DataFrame)
+    Obs_True : Les observations réelles (-->np.ndarray)
+    Inputs : La matrice associée aux variables d'entrée. Elle peut être  (-->pd.dataframe)
+    '''
+    if not isinstance(Variables_Selected, list):
+        raise TypeError("Le type de 'Variables_Selected' n'est pas le bon. Il doit être de type 'list'.")
+    if not isinstance(Alpha, str):
+        raise TypeError("Le type de 'Alpha' n'est pas le bon. Il doit être de type 'str'.")
+    if not isinstance(Summary_coefficients, pd.DataFrame):
+        raise TypeError("Le type de 'Summary_coefficients' n'est pas le bon. Il doit être de type 'pd.DataFrame'.")
+    if not isinstance(Obs_True, np.ndarray):
+        raise TypeError("Le type de 'Obs_True' n'est pas le bon. Il doit être de type 'np.ndarray'.")
+    if not isinstance(Inputs, pd.DataFrame):
+        raise TypeError("Le type de 'Inputs' n'est pas le bon. Il doit être de type 'pd.DataFrame'.")
+    if not Alpha in Summary_coefficients.columns:
+        raise TypeError("La valeur de 'Alpha' n'est pas correcte.")
+    if not set(Variables_Selected).issubset(Summary_coefficients['Variables'].tolist()):
+        raise TypeError("L'un des élements de 'Variables_Selected' n'est pas correct.")
+
+    # Sélection des variables utilisées pour le calcul des residus du modèle
+    filtre_variables_selected = Summary_coefficients['Variables'].isin(Variables_Selected)
+    Estimated_coefficients_filtre = Summary_coefficients.loc[filtre_variables_selected, Alpha]
+    List_Estimated_Coefficients = Estimated_coefficients_filtre.tolist()
+    List_Estimated_Coefficients_Index = Estimated_coefficients_filtre.index.tolist()
+
+    # Constitution du vecteur des coefficients de régression estimés
+    Estimated_Coefficients_init = np.zeros(Inputs.shape[1])
+    for i in range(len(List_Estimated_Coefficients_Index)):
+        Estimated_Coefficients_init[List_Estimated_Coefficients_Index[i]] = List_Estimated_Coefficients[i]
+    return Estimated_Coefficients_init
+
+
+    # Calculs de la sommes des carrés de residus (RSS)
+    Inputs_array = Inputs.values
+    Estimated_Coefficients_init_reshape = Estimated_Coefficients_init.reshape(1,Inputs.shape[1])
+    Obs_pred = Inputs_array @ Estimated_Coefficients_init_reshape.T
+    residuals = sum((Obs_True - Obs_pred)**2)
+    return residuals
