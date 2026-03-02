@@ -434,7 +434,45 @@ def visualization_shrinking(Summary_Coefficients_Lambda, color_palet='tab10', Mo
     plt.show()
 
 # Fonction pour calculer l'erreur de prédiction
-def residual_sum_square(Variables_Selected, Alpha, Summary_coefficients, Obs_True, Inputs):
+def Selection_Estimated_Coeffcients(Variables_Selected, Alpha, Summary_coefficients):
+
+    '''
+    Objectif:
+    ---------
+    Fonction pour obtenir une liste de coefficients de régresion estimés en procédant à une sélection des variables prédites et d'une valeur précise du facteur de pénalisation.
+
+    Arguments:
+    ----------
+    Variables_Selected : Liste associée aux variables prédites sélectionnées (-->list)
+    Alpha : Paramètre permettant de sélectionner les coefficients en fonction du coefficients de pénalisation (-->str)
+    Summary_coefficients : Synthèse des coefficients de régression estimés en fonction des coefficients de pénalisation (-->pd.DataFrame)
+    '''
+    if not isinstance(Variables_Selected, list):
+        raise TypeError("Le type de 'Variables_Selected' n'est pas le bon. Il doit être de type 'list'.")
+    if not isinstance(Alpha, str):
+        raise TypeError("Le type de 'Alpha' n'est pas le bon. Il doit être de type 'str'.")
+    if not isinstance(Summary_coefficients, pd.DataFrame):
+        raise TypeError("Le type de 'Summary_coefficients' n'est pas le bon. Il doit être de type 'pd.DataFrame'.")
+    if not Alpha in Summary_coefficients.columns:
+        raise TypeError("La valeur de 'Alpha' n'est pas correcte.")
+    if not set(Variables_Selected).issubset(Summary_coefficients['Variables'].tolist()):
+        raise TypeError("L'un des élements de 'Variables_Selected' n'est pas correct.")
+
+    # Sélection des variables utilisées pour le calcul des residus du modèle
+    filtre_variables_selected = Summary_coefficients['Variables'].isin(Variables_Selected)
+    Estimated_coefficients_filtre = Summary_coefficients.loc[filtre_variables_selected, Alpha]
+    List_Estimated_Coefficients = Estimated_coefficients_filtre.tolist()
+    List_Estimated_Coefficients_Index = Estimated_coefficients_filtre.index.tolist()
+
+    # Constitution du vecteur des coefficients de régression estimés
+    Estimated_Coefficients_init = np.zeros(Summary_coefficients.shape[0])
+    for i in range(len(List_Estimated_Coefficients_Index)):
+        Estimated_Coefficients_init[List_Estimated_Coefficients_Index[i]] = List_Estimated_Coefficients[i]
+    return Estimated_Coefficients_init
+
+
+# Fonction pour calculer l'erreur de prédiction
+def residual_sum_square_crash(Variables_Selected, Alpha, Summary_coefficients, Obs_True, Inputs):
 
     '''
     Objectif:
@@ -483,3 +521,71 @@ def residual_sum_square(Variables_Selected, Alpha, Summary_coefficients, Obs_Tru
     Obs_pred = Inputs_array @ Estimated_Coefficients_init_reshape.T
     residuals = sum((Obs_True - Obs_pred)**2)
     return residuals
+
+# Fonction pour calculer l'erreur de prédiction
+def residual_sum_square(Estimated_Coefficients_init, Obs_True, Inputs):
+
+    '''
+    Objectif:
+    ---------
+    Fonction pour calculer les residus du modèle en procédant à une sélection des variables prédites ou pas.
+
+    Arguments:
+    ----------
+    Estimated_Coefficients_init : Synthèse des coefficients de régression estimés en fonction des coefficients de pénalisation (-->pd.DataFrame)
+    Obs_True : Les observations réelles (-->np.ndarray)
+    Inputs : La matrice associée aux variables d'entrée. Elle peut être  (-->pd.dataframe)
+    '''
+    if not isinstance(Estimated_Coefficients_init, np.ndarray):
+        raise TypeError("Le type de 'Estimated_Coefficients_init' n'est pas le bon. Il doit être de type 'np.ndarray'.")
+    if not isinstance(Obs_True, np.ndarray):
+        raise TypeError("Le type de 'Obs_True' n'est pas le bon. Il doit être de type 'np.ndarray'.")
+    if not isinstance(Inputs, pd.DataFrame):
+        raise TypeError("Le type de 'Inputs' n'est pas le bon. Il doit être de type 'pd.DataFrame'.")
+
+    # Calculs de la sommes des carrés de residus (RSS)
+    Inputs_array = Inputs.values
+    Estimated_Coefficients_init_reshape = Estimated_Coefficients_init.reshape(1,Inputs.shape[1])
+    Obs_pred = Inputs_array @ Estimated_Coefficients_init_reshape.T
+    residuals = sum((Obs_True - Obs_pred)**2)
+    return residuals
+
+
+# Fonction pour encadrer les coefficiens estimés de régression
+def Estimated_Coefficients_Framed(Estimated_Coefficients_init, Variability, Number_Estimated_Coefficient):
+
+    DataFrame_Estimated_Coefficient = pd.DataFrame()
+
+    # Commentaire : Il se peut que certains coéfficients de la régression lasso soient nuls, par conséquent, il est préférable de mettre un garde-fou.
+    for enum, i in enumerate(Estimated_Coefficients_init):
+        if i != 0 :
+            estimated_coef = Estimated_Coefficients_init[enum]
+
+            # borne inférieure
+            born_inf = estimated_coef*(1-Variability)
+            interval_inf = np.linspace(start=born_inf,stop=estimated_coef, num=Number_Estimated_Coefficient, endpoint=False)
+
+            # borne supérieure
+            born_sup = estimated_coef*(1+Variability)
+            interval_sup = np.linspace(start=estimated_coef, stop=born_sup, num=Number_Estimated_Coefficient, endpoint=True)
+
+            # Interval complet
+            interval_comlete = np.concat((interval_inf, interval_sup))
+            DataFrame_Estimated_Coefficient[f"X_{enum+1}"] = interval_comlete
+            print(f"\n Fin de l'encadrement du coefficient estimé de la variable X_{enum+1}\n -----------")
+
+    return DataFrame_Estimated_Coefficient
+
+# Fonction pour calculer la sommes des carrés de residus en fonction de chaque coefficients estimé encadré
+def Residual_Sum_Square_On_Estimated_Coefficients_Framed(df_coefficient_estimated, list_coefficients, Target, Predictors):
+
+    list_residual_sum_square = []
+    for line in df_coefficient_estimated.index:
+        for enum_col, col in enumerate(df_coefficient_estimated.columns):
+            col_index = int(col[2:])-1
+            list_coefficients[col_index] = df_coefficient_estimated.iloc[line, enum_col]
+            residual = residual_sum_square(Estimated_Coefficients_init=list_coefficients, Obs_True=Target, Inputs=Predictors)
+        print(residual[0])
+        list_residual_sum_square.append(residual[0])
+        print(f"Somme des carrés des residus du Cycle : {line} \n-----------")
+    return list_residual_sum_square
