@@ -453,7 +453,7 @@ def residual_sum_square(Estimated_Coefficients_init, Obs_True, Inputs, Intercept
 
 
 # Fonction pour simuler les coefficiens de régression estimés selon une loi uniforme en fonction des variables d'entrée sélectionnées.
-def Simulation_Estimated_Coefficients(Estimated_Coefficients_init, Number_Estimated_Coefficient, Alpha, Model):
+def Simulation_Estimated_Coefficients(Estimated_Coefficients_init, True_Coef, Number_Estimated_Coefficient, Alpha, Model):
 
     '''
      Objectif:
@@ -482,9 +482,9 @@ def Simulation_Estimated_Coefficients(Estimated_Coefficients_init, Number_Estima
     for enum, i in enumerate(Estimated_Coefficients_init):
         if i != 0 :
             if Model == "ridge":
-                Interval_Complete = np.random.normal(0, Alpha, Number_Estimated_Coefficient)
+                Interval_Complete = np.random.normal(True_Coef[enum], Alpha, Number_Estimated_Coefficient)
             elif Model == "lasso":
-                Interval_Complete = np.random.laplace(0, Alpha, Number_Estimated_Coefficient)
+                Interval_Complete = np.random.laplace(True_Coef[enum], Alpha, Number_Estimated_Coefficient)
             else:
                 raise ValueError("La valeurs associée à l'argument 'Model' est incorrect.")
 
