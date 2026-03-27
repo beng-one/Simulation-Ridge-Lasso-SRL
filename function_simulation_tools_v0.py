@@ -42,7 +42,6 @@ def simulation_residus(PopulationSize=1000, LoiMoyenne=0, LoiVariance=1, Random_
     random_state_seed : noyau pour la réproductibilité des données simulées (-->int).
     '''
 
-
     # typage des paramètres de la fonction
     if not isinstance(PopulationSize, int):
         raise TypeError("Le type de 'PopulationSize' n'est pas le bon. Il doit être de type 'int'.")
@@ -294,7 +293,7 @@ def regularized_regressions(Predictors, Target, Alpha_list, Intercept, Model, Ra
     elif Intercept == False:
         Predictors_names = Predictors_names
     else:
-        raise ValueError(f"La valeur associée à l'argument args: Intercept est incorrecte")
+        raise ValueError(f"La valeurs associée à l'argument args: Intercept est incorrecte")
 
     summary_coef = pd.DataFrame({'Variables': Predictors_names})
 
@@ -331,6 +330,7 @@ def regularized_regressions(Predictors, Target, Alpha_list, Intercept, Model, Ra
 # Fonction pour visualiser le retrecissement des coefficients en fonction de lambda
 def visualization_shrinking(Summary_Coefficients_Lambda, color_palet='tab10', Model='ridge', SaveOptionPath=''):
     '''
+
     Objectif:
     ---------
     Fonction pour visualisation le retricement des coefficients des régression en fonction de lambda, le paramètre de pénalisation.
@@ -341,6 +341,7 @@ def visualization_shrinking(Summary_Coefficients_Lambda, color_palet='tab10', Mo
     color_palet : Palette de couleurs de Matplotlib https://matplotlib.org/stable/users/explain/colors/colormaps.html (-->str)
     Model : Modèle de régression pénalisée : Ridge, Lasso (-->str)
     SaveOptionPath : Chemin utilisé pour la sauvegarde de la figure (-->str)
+
     '''
     if not isinstance(Summary_Coefficients_Lambda, pd.DataFrame):
         raise TypeError("Le type de 'Summary_Coefficients_Lambda' n'est pas le bon. Il doit être de type 'pd.DataFrame'.")
@@ -379,6 +380,7 @@ def visualization_shrinking(Summary_Coefficients_Lambda, color_palet='tab10', Mo
 
 # Fonction pour calculer l'erreur de prédiction
 def Selection_Estimated_Coeffcients(Variables_Selected, Alpha, Summary_coefficients):
+
     '''
     Objectif:
     ---------
@@ -390,6 +392,7 @@ def Selection_Estimated_Coeffcients(Variables_Selected, Alpha, Summary_coefficie
     Alpha : Paramètre permettant de sélectionner les coefficients en fonction du coefficients de pénalisation (-->str).
     Summary_coefficients : Synthèse des coefficients de régression estimés en fonction des coefficients de pénalisation (-->pd.DataFrame).
     '''
+
     if not isinstance(Variables_Selected, list):
         raise TypeError("Le type de 'Variables_Selected' n'est pas le bon. Il doit être de type 'list'.")
     if not isinstance(Alpha, str):
@@ -414,8 +417,11 @@ def Selection_Estimated_Coeffcients(Variables_Selected, Alpha, Summary_coefficie
     return Estimated_Coefficients_init
 
 
+
+
 # Fonction pour calculer la somme des carrés des résidus
 def residual_sum_square(Estimated_Coefficients_init, Obs_True, Inputs, Intercept):
+
     '''
     Objectif:
     ---------
@@ -428,6 +434,7 @@ def residual_sum_square(Estimated_Coefficients_init, Obs_True, Inputs, Intercept
     Inputs : La matrice associée aux variables d'entrée (-->pd.dataframe).
     Intercept : Intercept estimé (-->float).
     '''
+
     if not isinstance(Estimated_Coefficients_init, np.ndarray):
         raise TypeError("Le type de 'Estimated_Coefficients_init' n'est pas le bon. Il doit être de type 'np.ndarray'.")
     if not isinstance(Obs_True, np.ndarray):
@@ -447,6 +454,7 @@ def residual_sum_square(Estimated_Coefficients_init, Obs_True, Inputs, Intercept
 
 # Fonction pour simuler les coefficiens de régression estimés selon une loi uniforme en fonction des variables d'entrée sélectionnées.
 def Simulation_Estimated_Coefficients(Estimated_Coefficients_init, True_Coef, Number_Estimated_Coefficient, Alpha, Model):
+
     '''
      Objectif:
     ---------
@@ -458,7 +466,9 @@ def Simulation_Estimated_Coefficients(Estimated_Coefficients_init, True_Coef, Nu
     Number_Estimated_Coefficient :
     Alpha :
     Model :
+
     '''
+
     #if not isinstance(Estimated_Coefficients_init, np.ndarray):
     #    raise TypeError("Le type de 'Estimated_Coefficients_init' n'est pas le bon. Il doit être de type 'np.ndarray'.")
     #if not isinstance(Obs_True, np.ndarray):

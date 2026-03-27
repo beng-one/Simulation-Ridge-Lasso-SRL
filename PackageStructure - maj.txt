@@ -1,0 +1,64 @@
+.
+├── Residuals()
+    ├── __init__
+    |	    └── population_size
+    |	    └── random_seed
+    └── Simulation   ==> residuals_simulated
+    |	    └── population_size(self)
+    |	    └── random_seed(self)
+    |	    └── law="normal"
+    |	    └── law_parameters=[0,1]
+    └── Statistics ==> summary_residuals_statistics
+    |	    └── residuals_simulated
+    |	    └── digits
+    └── Visualization ==> [histogram, boxplot, qqplot]
+    |	    └── residuals_simulated
+    |	    └── figure
+.
+├── Target_Predictors()
+    ├── __init__
+    |	    └── population_size
+    |	    └── features_number
+    |	    └── true_coefficients
+    └── Simulation ==> data_simulated_population
+    |	    └── population_size(self)
+    |	    └── features_number(self)
+    |	    └── true_coefficients(self)
+    |	    └── residuals_simulated
+    └── Sampling ==> data_simulated_sample
+    |	    └── population_simulated
+    |	    └── sample_size
+    └── Visualization ==> [lineplot, scatterplot, correlation_matrix]
+    |	    └── data_simulated
+    |	    └── figure
+.
+├── Regularization()
+    ├── __init__
+    |	    └── predictors
+    |	    └── target
+    |	    └── alpha
+    |	    └── intercept
+    |	    └── random_seed
+    └── Penalized_Regression ==> penalized_coefficients_table
+    |	    └── predictors(self)
+    |	    └── target(self)
+    |	    └── alpha(self)
+    |	    └── intercept(self)
+    |	    └── random_seed(self)
+    |	    └── model
+    └── Visualization_Shrinking ==> shrinking_plot
+    |	    └── penalized_coefficients_table
+    └── Predict ==> [predicting, residuals]
+    |	    └── penalized_coefficients_table
+    |	    └── variables_selected
+    |	    └── alpha_value
+    |	    └── true_target
+    |	    └── predictors
+    |	    └── purpose
+    └── Simulation_Penalized_Coefficients ==> data_simulated_coefficients
+    |	    └── model
+    |	    └── penalized_coefficients_init
+    |	    └── alpha_value
+    |	    └── true_coefficients
+    |	    └── number_simulated_penalized_coefficients
+

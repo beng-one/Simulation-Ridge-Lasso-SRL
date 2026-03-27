@@ -1,0 +1,76 @@
+.
+├── Residuals()
+    ├── __init__
+    |	    └── PopulationSize
+    |	    └── RandomSeed
+    └── Simulation
+    |	    └── PopulationSize(self)
+    |	    └── RandomSeed(self)
+    |	    └── Law = "normal"
+    |	    └── ParamsLaw = [0,1]
+    └── Statistics
+    |	    └── ResidualsSimulated
+    |	    └── Digits
+    └── Visualization
+    |	    └── ResidualsSimulated
+    |	    └── Figure
+.
+├── TargetPredictors()
+    ├── __init__
+    |	    └── PopulationSize(self)
+    |	    └── FeaturesNumber(self)
+    |	    └── TrueCoefficients(self)
+    └── Simulation(**)
+    |	    └── PopulationSize(self)
+    |	    └── FeaturesNumber(self)
+    |	    └── TrueCoefficients(self)
+    |	    └── ResidualsSimulated
+    └── Sampling
+    |	    └── PopulationSimulated
+    |	    └── SampleSize
+    └── Visualization
+    |	    └── (*XySimualted*)
+    |	    └── Figure
+.
+├── Regularization()
+    ├── __init__
+    |	    └── Predictors
+    |	    └── Target
+    |	    └── Alpha
+    |	    └── Intercept
+    |	    └── RandomSeed
+    └── Regression(**)
+    |	    └── Predictors
+    |	    └── Target
+    |	    └── Alpha
+    |	    └── Intercept
+    |	    └── RandomSeed
+    |	    └── Model
+    └── Visualization
+    |	    └── SummaryCoef
+    └── SelectionPenalizedCoefficients
+    |	    └── SummaryCoef
+    |	    └── VariablesSelected
+    |	    └── Alpha
+    └── RSSPenalizedCoefficients
+    |	    └── EstimatedCoefficientsInit
+    |	    └── TrueObs
+    |	    └── Inputs
+    |	    └── InterceptValue(**)
+    └── SimulationPenalizedcoefficients
+    |	    └── Estimated_Coefficients_init
+    |	    └── True_Coef
+    |	    └── Number_Estimated_Coefficient
+    |	    └── Alpha
+    |	    └── Alpha
+    └── RSSPenalizedCoefficientsSimulated
+    |	    └── Predictors
+    |	    └── Target
+    |	    └── Alpha
+    |	    └── Intercept
+    |	    └── RandomSeed
+    |	    └── df_coefficient_estimated
+    |	    └── Estimated_Coefficients_init
+    |	    └── Obs_True
+    |	    └── Inputs
+    |	    └── Intercept
