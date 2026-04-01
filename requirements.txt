@@ -2,13 +2,13 @@
 numpy
 pandas
 
+
 # Visualitation
 matplotlib
 seaborn
 
-# Modèles de régression
+# Mathématiques et modèles de régression
 scikit-learn
-
-# Vérification des résultats de sklearn
+scipy
 statsmodels
 cvxopt

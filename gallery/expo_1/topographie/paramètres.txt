@@ -1,0 +1,6 @@
+PopulationSize = 1000
+LoiMoyenne = 4.0
+LoiVariance = 18
+FeatureNumber = 10
+Coefs_B =  list(np.random.normal(5, 18, FeatureNumber))
+SampleSize = 360
