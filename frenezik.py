@@ -5,6 +5,7 @@ import math
 import numpy as np
 import pandas as pd
 import scipy
+from numpy.random.mtrand import RandomState
 
 # Visualitation
 import matplotlib.pyplot as plt
@@ -13,13 +14,12 @@ import seaborn as sns
 
 # Modèles de régression
 import sklearn
-from hyperframe.frame import DataFrame
-from numpy.random.mtrand import RandomState
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import statsmodels.api as sm
 from statsmodels.regression.linear_model import OLS
+from hyperframe.frame import DataFrame
 import cvxopt
 
 # Répertoire de travail et gestion d'erreur
@@ -36,8 +36,28 @@ def rss_computing(beta, X, y, intercept):
     rss = np.sum((y - y_chapo) ** 2)
     return rss
 
+fill_violet_color = "#3d0261"
+edge_orange_color = "#fbba6d"
+
 # CLASS --------------------------
 class Residuals():
+
+    '''
+    Objectif:
+    ----------
+    Class permettant de simuler des résidus selon une loi à priori et d'effectuer des analyses descriptives
+
+    Arguments:
+    ---------
+    population_size : taille de la population souhaitée --> (int).
+    random_seed : noyau de reproductibilité --> (float, None).
+
+    Fonctions:
+    ---------
+    Residuals.Simulation : Fonction pour simuler les résidus de la population selon une loi à priori.
+    Residuals.Statistics : Fonction pour calculer les statistiques descriptives des résidus simulés.
+    Residuals.Visualization : Fonction pour visualiser la distribution et la dispersion des résidus.
+    '''
 
     def __init__(self, population_size, random_seed):
         self.population_size = population_size
@@ -140,12 +160,13 @@ class Residuals():
 
         # Histogramme des résidus simulés
         if figure == "histogram":
-            sns.histplot(residuals_simulated, kde=True)
+            sns.histplot(residuals_simulated, stat="density", color=fill_violet_color, linestyle='-', edgecolor=edge_orange_color, alpha=1)
+            sns.kdeplot(residuals_simulated, color=edge_orange_color)
             xmin, xmax, ymin, ymax = plt.axis()
             plt.title(f"Histogramme des residus simulés")
             plt.text(xmax * (1-0.05),
                      ymax * (1-0.05),
-                     f"N={self._Count_}\n"
+                     f"$N$={self._Count_}\n"
                      f" $\\mu$={self._Mean_}\n"
                      f" $\\sigma^{2}$={self._Variance_}\n"
                      f" $skewness$={self._Skewness_}\n"
@@ -157,21 +178,42 @@ class Residuals():
 
         # Boîte à moustache des résidus simulés
         elif figure == 'boxplot':
-            sns.boxplot(residuals_simulated)
+            sns.boxplot(x=residuals_simulated, linecolor=edge_orange_color, color=fill_violet_color, linewidth=1)
             plt.title(f"Boxplot des residus simulés")
+            plt.xlabel('residus')
             plt.grid(visible=True, alpha=0.25, linestyle='--')
             plt.plot()
 
         # QQplot des résidus simulés
         elif figure == "qqplot":
-            sm.qqplot(residuals_simulated, fit=True, line='45')
+            pp = sm.ProbPlot(residuals_simulated, fit=True)
+            qq = pp.qqplot(marker='.', markerfacecolor=fill_violet_color, markeredgecolor=fill_violet_color, alpha=1,
+                           markersize=12)
+            sm.qqline(qq.axes[0], line='45', color=edge_orange_color)
             plt.title("QQplot des residus simulées")
-            plt.grid(True, alpha=0.25, linestyle='--')
+            plt.grid(visible=True, alpha=0.25, linestyle='--')
             plt.show()
         else:
             raise ValueError(f"La valeurs associée à l'argument args: Figure est incorrecte")
 
 class TargetPredictors():
+
+    '''
+    Objectif:
+    ----------
+    Class permettant de simuler les données d'entrée X et de sortie y de la population et d'effectuer des analyses descriptives
+
+    Arguments:
+    ---------
+    population_size : taille de la population souhaitée --> (int).
+    true_coefficients : coefficients réels associés aux variables explicatives X --> (list, np.ndarray).
+
+    Fonctions:
+    ---------
+    Residuals.Simulation : Fonction pour simuler les variables X et y de la population.
+    Residuals.Sampling : Fonction pour simuler les données de l'échantillon à partir des données de la population.
+    Residuals.Visualization_X_y : Fonction pour visualiser les données simulées.
+    '''
 
     def __init__(self, population_size, true_coefficients):
         self.population_size = population_size
@@ -182,7 +224,7 @@ class TargetPredictors():
         '''
         Objectif:
         ----------
-        Fonction pour simuler les données d'entrées X et la variable y de la population.
+       Fonction pour simuler les variables X et y de la population.
 
         Arguments:
         ---------
@@ -227,7 +269,7 @@ class TargetPredictors():
         '''
         Objectif:
         ----------
-        Fonction simuler les données de l'échantillon à partir des données de la population.
+        Fonction pour simuler les données de l'échantillon à partir des données de la population.
 
         Arguments:
         ---------
@@ -264,13 +306,16 @@ class TargetPredictors():
 
         # Personnalisation de la palette des couleurs
         cmaps = plt.colormaps
-        colors = cmaps.get_cmap("tab10").resampled(data_simulated.shape[1]).colors
+        variable_number = data_simulated.shape[1]
+        color_index_inf = int(variable_number * (1 - 0.70))
+        color_index_sup = int(variable_number * (1 + 0.30))
+        colors = cmaps.get_cmap("magma").resampled(color_index_sup).colors
 
         # Graphique en courbe
         if figure == "lineplot":
             fig, axs = plt.subplots()
             for i, col in enumerate(data_simulated.columns):
-                axs.plot(data_simulated[col], label=col, linestyle="dotted", color=colors[i]) # personnalisation des couleurs
+                axs.plot(data_simulated[col], label=col, linestyle="-", color=colors[color_index_inf+i], linewidth=1) # personnalisation des couleurs
             plt.title(f"Evolution des données simulées")
             plt.xlabel(f"Nombre d'observation")
             plt.ylabel(f"Valeurs")
@@ -291,7 +336,7 @@ class TargetPredictors():
         elif figure == "correlation_matrix":
             # Matrice de corrélation
             data_simulated_corr = data_simulated.corr()
-            sns.heatmap(data_simulated_corr, vmin=-1, vmax=1, cmap='RdBu_r', annot=True, cbar=True,
+            sns.heatmap(data_simulated_corr, vmin=-1, vmax=1, cmap='magma_r', annot=True, cbar=True,
                         linewidths=1, annot_kws={'fontsize': 9})
             plt.title("Matrice de correlation")
             plt.show()
@@ -299,6 +344,28 @@ class TargetPredictors():
             raise ValueError("La valeurs associée à l'argument args: figure est incorrecte")
 
 class Regularization():
+
+    '''
+    Objectif:
+    ----------
+    Class permettant de modéliser y en fonction X à l'aide d'une régression régularisée dépendant du paramètre alpha.
+
+    Arguments:
+    ---------
+    predictors : matrice associée aux variables prédictives X --> (np.ndarray, pd.DataFrame).
+    target : variable cible y --> (list, np.ndarray).
+    alpha : facteurs de pénalisation --> (list, np.ndarray).
+    intercept : intercept du modèle --> (bool).
+    random_seed : noyau de reproductibilité --> (float).
+
+    Fonctions:
+    ---------
+    Residuals.Penalized_Regression : Fonction pour modéliser y en fonction de X à l'aide d'un modèle de régression régularisée.
+    Residuals.Visualization_Shrinking : Fonction pour visualiser le rétrecissement des coefficients en fonction de la force du paramètre alpha.
+    Residuals.Predict : Fonction pour calculer y prédite et les residus estimés en fonction des variables prédictives et du paramètre alpha à sélectionner.
+    Residuals.Vizualisation_Residuals : Fonction pour visualiser en 3D la relation entre les résidus et les coefficients de régression simulés.
+    Residuals.gradient_residual_plot : Fonction pour visualiser en 3D la relation entre les résidus et les variables du modèle.
+    '''
 
     def __init__(self, predictors, target, alpha, intercept, random_seed):
         self.predictors = predictors
@@ -329,7 +396,7 @@ class Regularization():
 
         # Intégration de l'intercept dans le vecteur des coefficients de régression
         if self.intercept == True:
-            predictors_names.insert(index=0, object="Intercept")
+            predictors_names.insert(0, "Intercept")
         elif self.intercept == False:
             predictors_names = predictors_names
         else:
@@ -376,7 +443,7 @@ class Regularization():
         '''
         Objectif:
         ----------
-        Fonction pour visualiser le rétrecissement des coefficients pénalisés en fonction de alpha.
+        Fonction pour visualiser le rétrecissement des coefficients en fonction de la force du paramètre alpha.
 
         Arguments:
         ---------
@@ -402,14 +469,18 @@ class Regularization():
             df_T = df.T
 
             # Sélection de la palette de couleurs
+            variable_number = df_T.shape[1]
+            color_index_inf = int(variable_number * (1 - 0.70))
+            color_index_sup = int(variable_number * (1 + 0.30))
             cmaps = plt.colormaps
-            colors = cmaps.get_cmap("tab10").resampled(df_T.shape[1]).colors
+            colors = cmaps.get_cmap("magma").resampled(color_index_sup).colors
+
 
             # Visualisation
             fig, axs = plt.subplots()  # Automatisation de figsize
             for i, predictor in enumerate(df_T.columns):
                 axs.plot(df_T.index, df_T[predictor], label=predictor, linestyle="-", alpha=1, linewidth=2, marker="*",
-                         color=colors[i])  # Personalisation des couleurs
+                         color=colors[color_index_inf+i])  # Personalisation des couleurs
             xmin, xmax, ymin, ymax = plt.axis()
             plt.axhline(y=0, xmin=0, xmax=1, color='gray', linestyle='--')
             plt.title('Evolution des coefficients en fonction de Lambda')
@@ -542,7 +613,7 @@ class Regularization():
     # Evolution des écarts-types
 
 # Fonction pour visualiser la relation entre les residus du modèle et les coefficients de régression
-    def Vizualisation_Residuals(self, list_beta_1, list_beta_2, predictors, target, var_1, var_2, figure):
+    def Vizualisation_Residuals(self, list_beta_1, list_beta_2, predictors, target, var_1, var_2, penalized_coefficients_table, figure):
 
         '''
          Objectif:
@@ -591,6 +662,18 @@ class Regularization():
             plt.contour(B1, B2, rss, levels=50, linewidths=0.5, colors='yellow')
             cp = plt.contourf(B1, B2, rss, levels=100, cmap='magma')
             plt.colorbar(cp, label="RSS")
+
+            for enum, col in enumerate(penalized_coefficients_table.columns[1:]):
+
+                list = penalized_coefficients_table.iloc[1:, enum + 1].values
+
+                if col == 'true_coefficients':
+                    plt.scatter(list[0], list[1], alpha=1, linestyle='--', color='green', label="true_coefs")
+                elif col == "0.0":
+                    plt.scatter(list[0], list[1], alpha=1, linestyle='--', color='yellow', label="mco_coefs")
+                else:
+                    plt.scatter(list[0], list[1], alpha=1, linestyle='--', color='blue', label="penalized_coefs")
+
             plt.xlabel(f"$\\beta_{var_1[-1]}$")
             plt.ylabel(f"$\\beta_{var_2[-1]}$")
             plt.title("Carte de niveau du RSS")
@@ -672,10 +755,8 @@ class Regularization():
 
         # Contour + gradient
         plt.contour(Xi, Yi, Zi, levels=50, linewidths=0.5, colors='yellow')
-        cp = plt.contourf(Xi, Yi, Zi, levels=100, cmap='RdBu_r')  # RdBu_rcmap=''
+        cp = plt.contourf(Xi, Yi, Zi, levels=100, cmap='magma')
         plt.colorbar(cp, label="Residual")
-        # plt.plot(Coefs_B[0], Coefs_B[1], marker="o", color="darkred", label="True Coefficients")
-        # plt.plot(coef_opt_ridge[var_1].values, coef_opt_ridge[var_2].values, marker="o", color="darkblue", label=f"Penalized Coefficients{model}")
         plt.xlabel(f"B_{var_1[-1]}")
         plt.ylabel(f"B_{var_2[-1]}")
         plt.title("Carte de niveau du RSS")
