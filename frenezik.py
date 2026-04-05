@@ -30,7 +30,7 @@ import warnings
 import typing
 import mypy
 
-# Configuration de la visualisation
+# Configuration de l'identité visuelle
 fill_violet_color = "#3d0261"
 edge_orange_color = "#fbba6d"
 
@@ -54,6 +54,32 @@ def rss_computing(beta, X, y, intercept):
     rss : valeur associée à la somme des carrés des résidus --> (float).
     '''
 
+    # Vérification de <<beta>>
+    if not isinstance(beta, np.ndarray):
+        if isinstance(beta, list):
+            beta = np.array(beta)
+        else:
+            raise TypeError("Le type de <<beta>> n'est pas correct. <<beta>> doit être de type nd.array ou list")
+
+    # Vérifiation de <<X>>
+    if not isinstance(X, (np.ndarray, pd.DataFrame)):
+        if isinstance(X, list):
+            X = np.array(X)
+        else:
+            raise TypeError("Le type de <<X>> n'est pas correct. <<X>> doit être de type pd.DataFrame.")
+
+    # Vérification de <<y>>
+    if not isinstance(y, np.ndarray):
+        if isinstance(y, list):
+            y = np.array(y)
+        else:
+            raise TypeError("Le type de <<y>> n'est pas correct. <<y>> doit être de type np.ndarray ou list.")
+
+    # Vérification de <<intercept>>
+    if not isinstance(intercept, (int, float)):
+        raise TypeError("Le type de <<intercept>> n'est pas correct. <<intercept>> doit être de type float ou int.")
+
+
     # calcul de la somme des carrés des résidus
     y_chapo = X @ beta + intercept * np.ones(shape=(X.shape[0], 1))
     rss = np.sum((y - y_chapo) ** 2)
@@ -66,7 +92,7 @@ class Residuals():
     '''
     Objectif:
     ----------
-    Class permettant de simuler des résidus selon une loi à priori et d'effectuer des analyses descriptives
+    Class permettant de simuler des résidus selon une loi à priori et d'effectuer des analyses descriptives.
 
     Arguments:
     ---------
@@ -82,21 +108,21 @@ class Residuals():
 
     def __init__(self, population_size, random_seed):
 
-        # vérification de <<population_size>>
-        if not instance(population_size, int):
+        # Vérification de <<population_size>>
+        if not isinstance(population_size, int):
             raise TypeError("Le type de <<population_size>> n'est pas correct. <<population_size>> doit être de type 'int'.")
         if not population_size >= 0:
             raise ValueError(" La valeur de <<population_size>> n'est pas correcte. <<population_size>> doit être superieur ou égale à 0.")
 
-        # vérification de <<random_seed>>
-        if not instance(self.random_seed, (float, None)):
+        # Vérification de <<random_seed>>
+        if not isinstance(random_seed, (int, type(None))):
             raise TypeError("Le type de <<random_seed>> n'est pas correct. <<random_seed>> doit être de type 'float' ou 'None.")
 
         self.population_size = population_size
         self.random_seed = random_seed
 
     # Fonction pour simuler les résidus selon une loi à priori
-    def Simulation(self, law="normal", law_parameters=[0,1]):
+    def Simulation(self, law="normal", law_parameters=[0, 1]):
 
         '''
         Objectif:
@@ -110,25 +136,27 @@ class Residuals():
 
         Sortie:
         -------
-        residuals_simulated : résidus simulés --> (np.ndarray)
+        residuals_simulated : résidus simulés --> (np.ndarray).
         '''
 
-        # vérification de <<law>>
+        # Vérification de <<law>>
         if not isinstance(law, str):
-            raise ValueError("Le type de <<law>> n'est pas correct. <<law>> doit être de type <<str>>.")
+            raise TypeError("Le type de <<law>> n'est pas correct. <<law>> doit être de type <<str>>.")
         if not law in ("normal", "student", "pareto", "weibull"):
             raise ValueError("La valeur de <<law>> n'est pas correcte. <<law>> doit contenir une valeur parmi : normal, student, pareto, weibull.")
+
+        # Vérification de <<law_parameters>>
         if not isinstance(law_parameters, (list, np.ndarray)):
             raise TypeError("Le type de <<law_parameters>> n'est pas correct. <<law_parameters>> doit être de type list ou np.ndarray.")
 
         if law == "normal" and len(law_parameters)!= 2:
-            raise ValueError("<<law parameters>> associé à la loi normle doit être de taille 2.")
+            raise ValueError("<<law parameters>> associé à la loi normale doit contenir 2 éléments.")
         if law == "student" and len(law_parameters)!= 1:
-            raise ValueError("<<law parameters>> associé à la loi de Student doit être de taille 1.")
+            raise ValueError("<<law parameters>> associé à la loi de Student doit contenir 1 éléments.")
         if law == "pareto" and len(law_parameters)!= 1:
-            raise ValueError("<<law parameters>> associé à la loi de Pareto doit être de taille 1.")
+            raise ValueError("<<law parameters>> associé à la loi de Pareto doit contenir 1 éléments.")
         if law == "weibull" and len(law_parameters)!= 1:
-            raise ValueError("<<law parameters>> associé à la loi de Weibull doit être de taille 1.")
+            raise ValueError("<<law parameters>> associé à la loi de Weibulldoit contenir 1 éléments.")
 
         # Noyau de reproductibilité
         np.random.seed(self.random_seed)
@@ -174,7 +202,7 @@ class Residuals():
 
         # Vérification de <<digits>>
         if not isinstance(digits, int):
-            raise ("Le type de <<digits>> n'est pas correct. <<residuals_simulated>> doit être de type <<int>>")
+            raise TypeError("Le type de <<digits>> n'est pas correct. <<residuals_simulated>> doit être de type int.")
         if not digits >= 0:
             raise TypeError("La valeur de <<digits>> n'est pas correcte. <<digits>> doit être supérieur ou égal à 0.")
 
@@ -234,6 +262,7 @@ class Residuals():
 
         # Histogramme des résidus simulés
         if figure == "histogram":
+            fig = plt.figure()
             sns.histplot(residuals_simulated, stat="density", color=fill_violet_color, linestyle='-', edgecolor=edge_orange_color, alpha=1)
             sns.kdeplot(residuals_simulated, color=edge_orange_color)
             xmin, xmax, ymin, ymax = plt.axis()
@@ -251,31 +280,33 @@ class Residuals():
             return plt.plot()
 
         # Boîte à moustache des résidus simulés
-        if figure == 'boxplot':
+        elif figure == 'boxplot':
+            fig = plt.figure()
             sns.boxplot(x=residuals_simulated, linecolor=edge_orange_color, color=fill_violet_color, linewidth=1)
             plt.title(f"Boxplot des residus simulés")
             plt.xlabel('residus')
             plt.grid(visible=True, alpha=0.25, linestyle='--')
-            plt.plot()
+            return plt.plot()
 
         # QQplot des résidus simulés
-        if figure == "qqplot":
+        elif figure == "qqplot":
+            fig = plt.figure()
             pp = sm.ProbPlot(residuals_simulated, fit=True)
             qq = pp.qqplot(marker='.', markerfacecolor=fill_violet_color, markeredgecolor=fill_violet_color, alpha=1,
                            markersize=12)
             sm.qqline(qq.axes[0], line='45', color=edge_orange_color)
             plt.title("QQplot des residus simulées")
             plt.grid(visible=True, alpha=0.25, linestyle='--')
-            plt.show()
+            return plt.show()
         else:
-            raise TypeError("La valeur de <<figure>> n'est pas correcte. <<figure>> doit contenir une valeur parmi : 'histogram', 'boxplot', 'qqplot'.")
+            raise ValueError("La valeur de <<figure>> n'est pas correcte. <<figure>> doit contenir une valeur parmi : 'histogram', 'boxplot', 'qqplot'.")
 
 class TargetPredictors():
 
     '''
     Objectif:
     ----------
-    Class permettant de simuler les données d'entrée X et de sortie y de la population et d'effectuer des analyses descriptives
+    Class permettant de simuler les données d'entrée X et de sortie y de la population et d'effectuer des analyses descriptives.
 
     Arguments:
     ---------
@@ -302,7 +333,7 @@ class TargetPredictors():
             if isinstance(true_coefficients, list):
                 true_coefficients = np.array(true_coefficients)
             else:
-                raise TypeError("Le type de <<true_coefficients>> ")
+                raise TypeError("Le type de <<true_coefficients>> n'est pas correct. <<true_coefficients>> doit être de type np.ndarray ou list.")
 
         self.true_coefficients = true_coefficients
         self.population_size = population_size
@@ -383,9 +414,9 @@ class TargetPredictors():
 
         # Vérification de <<sample_size>>
         if not isinstance(sample_size, int):
-            raise ("Le type de <<sample_size>> n'est pas correct. <<sample_size>> doit être de type <<int>>")
+            raise TypeError("Le type de <<sample_size>> n'est pas correct. <<sample_size>> doit être de type int.")
         if not sample_size >= 0:
-            raise TypeError("La valeur de <<sample_size>> n'est pas correcte. <<sample_size>> doit être supérieur ou égal à 0.")
+            raise ValueError("La valeur de <<sample_size>> n'est pas correcte. <<sample_size>> doit être supérieur ou égal à 0.")
 
         # Constituer de l'échantillon
         data_simulated_sample = population_simulated.sample(sample_size)
@@ -437,7 +468,7 @@ class TargetPredictors():
             plt.ylabel(f"Valeurs")
             plt.grid(visible=True, alpha=0.25, linestyle='--')
             plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-            plt.show()
+            return plt.show()
 
         # Nuage de points
         elif figure == "scatterplot":
@@ -446,7 +477,7 @@ class TargetPredictors():
                 axs.plot(data_simulated[var], label=var, linestyle="dotted", color=colors[i], marker="")
             plt.grid(visible=True, alpha=0.25, linestyle='--')
             plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-            plt.show()
+            return plt.show()
 
         # Matrice de correlation
         elif figure == "correlation_matrix":
@@ -454,9 +485,9 @@ class TargetPredictors():
             sns.heatmap(data_simulated_corr, vmin=-1, vmax=1, cmap='magma_r', annot=True, cbar=True,
                         linewidths=1, annot_kws={'fontsize': 9})
             plt.title("Matrice de correlation")
-            plt.show()
+            return plt.show()
         else:
-            raise ValueError("<<figure>> doit contenir une valeur parmi : 'lineplot', 'scatterplot', 'correlation_matrix'.")
+            raise ValueError("La valeur de <<figure>> n'est pas correcte. <<figure>> doit contenir une valeur parmi : 'lineplot', 'scatterplot', 'correlation_matrix'.")
 
 class Regularization():
 
@@ -504,11 +535,11 @@ class Regularization():
 
         # Vérifiation de <<intercept>>
         if not isinstance(intercept, bool):
-            raise TypeError("Le type de <<intercept>> n'est pas correct. <<intercept>> doit être de type bool. ")
+            raise TypeError("Le type de <<intercept>> n'est pas correct. <<intercept>> doit être de type bool.")
 
         # vérification de <<random_seed>>
-        if not instance(self.random_seed, (float, None)):
-            raise TypeError("Le type de <<random_seed>> n'est pas correct. <<random_seed>> doit être de type 'float' ou 'None.")
+        if not isinstance(random_seed, (int, type(None))):
+            raise TypeError("Le type de <<random_seed>> n'est pas correct. <<random_seed>> doit être de type int ou None.")
 
         self.predictors = predictors
         self.target = target
@@ -546,7 +577,7 @@ class Regularization():
         elif self.intercept == False:
             predictors_names = predictors_names
         else:
-            raise ValueError("La valeur associée à l'argument args: intercept est incorrecte.")
+            raise ValueError("La valeur associée <<intercept>> est n'est pas correcte.")
 
         penalized_coefficients_table = pd.DataFrame({
             'Variables':predictors_names,
@@ -554,27 +585,34 @@ class Regularization():
 
         # Modèle de régression régularisée
         for alpha_elem in self.alpha:
-            if model == 'ridge':
-                # Modèle de Régression Régularisée Ridge
+
+            # Modèle ridge pour alpha=0
+            if alpha_elem == 0:
                 penalized_model = Ridge(alpha=alpha_elem, fit_intercept=self.intercept, random_state=self.random_seed)
-            elif model == 'lasso':
-                # Modèle de Régression Régularisée Lasso
-                penalized_model = Lasso(alpha=alpha_elem, fit_intercept=self.intercept, random_state=self.random_seed)
+
+            # Modèle de régression régularisé pour alpha != 0
             else:
-                raise ValueError(f"Le modèle {model} sélectionné n'est pas supporté dans la fonction. Les modèles pris en charge sont 'ridge' et 'lasso'.")
+                if model == 'ridge':
+                    # Modèle de Régression Régularisée Ridge
+                    penalized_model = Ridge(alpha=alpha_elem, fit_intercept=self.intercept, random_state=self.random_seed)
+                elif model == 'lasso':
+                    # Modèle de Régression Régularisée Lasso
+                    penalized_model = Lasso(alpha=alpha_elem, fit_intercept=self.intercept, random_state=self.random_seed)
+                else:
+                    raise ValueError(f"La valeur de <<model>> n'est pas correcte. <<model>> doit prendre des valeurs parmi : 'ridge', 'lasso'.")
 
             # Résultats du modèles : Intercept et coefficients estimés
             penalized_model.fit(self.predictors, self.target)
-            result_intercept = penalized_model.intercept_
+            self.result_intercept = penalized_model.intercept_
             result_coefficients = penalized_model.coef_
 
             # Intégration de l'intercept dans le vecteur des coefficients de régression
             if self.intercept == True:
-                result_complete = np.insert(result_coefficients, 0, result_intercept)
+                result_complete = np.insert(result_coefficients, 0, self.result_intercept)
             elif self.intercept == False:
                 result_complete = result_coefficients
             else:
-                raise ValueError(" L<<intercept>> doit contenir une valeur parmi : 'intercept', 'scatterplot', 'correlation_matrix'.")
+                raise ValueError("La valeur associée <<intercept>> est n'est pas correcte.")
 
             # Mise à jour du dataframe
             alpha_elem_name = f"{alpha_elem}"
@@ -605,20 +643,20 @@ class Regularization():
         '''
 
         # Vérification de <<penalized_coefficients_table>>
-        if not isinstance(penalizedype_coefficients_table, pd.DataFrame):
-            raise TypeError("Le type de <<penalizedype_coefficients_table>> n'est pas correct. <<penalizedype_coefficients_table>> doit être pd.DataFrame.")
+        if not isinstance(penalized_coefficients_table, pd.DataFrame):
+            raise TypeError("Le type de <<penalized_coefficients_table>> n'est pas correct. <<penalized_coefficients_table>> doit être de type pd.DataFrame.")
 
         # Vérification de <<variables_selected>>
-        if not isinstance(variables_selected, list):
-            raise TypeError("Le type de <<variables_selected>> n'est pas correct. <<variables_selected>> doit être list.")
+        if not isinstance(variables_selected, (list, type(None))):
+            raise TypeError("Le type de <<variables_selected>> n'est pas correct. <<variables_selected>> doit être de type list ou None.")
 
-        # Vérification de <<alpha_value_selected>>
-        if not isinstance(alpha_value_selected, float):
-            raise TypeError("Le type de <<alpha_value_selected>> n'est pas correct. <<alpha_value_selected>> doit être de float.")
+        # Vérification de <<alpha_value>>
+        if not isinstance(alpha_value_selected, (str, type(None))):
+            raise TypeError("Le type de <<alpha_value_selected>> n'est pas correct. <<alpha_value_selected>> doit être de type float, int ou None.")
 
         # Vérification de <<figure>>
         if not isinstance(figure, str):
-            raise TypeError("Le type de <<figure>> n'est pas correct. <<figure>> doit être de str.")
+            raise TypeError("Le type de <<figure>> n'est pas correct. <<figure>> doit être de type str.")
 
         # Visualisation du rétrecissement selon une approche par courbe
         if figure == "curve":
@@ -649,7 +687,7 @@ class Regularization():
             plt.ylabel("Coefficients")
             plt.grid(visible=True, alpha=0.25, linestyle='--')
             plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-            plt.show()
+            return plt.show()
 
         # Visualisation du rétrecissement selon une approche par ellipse
         elif figure == "ellipse":
@@ -703,7 +741,8 @@ class Regularization():
             plt.plot(mco_coefficients[0], mco_coefficients[1], 'k.')
             plt.text(mco_coefficients[0], mco_coefficients[1], "beta")
             plt.grid(True, alpha=0.15, linestyle='--')
-            plt.show()
+            return plt.show()
+        raise ValueError("La valeur de <<figure>> n'est pas correcte. <<figure>> doit prendre une valeur parmi : 'curve', 'ellipse'.")
 
     # Fonction pour obtenir des valeurs prédites de y et des résidus
     def Predict(self, penalized_coefficients_table, variables_selected, alpha_value, true_target, predictors, purpose):
@@ -734,12 +773,12 @@ class Regularization():
             raise TypeError("Le type <<penalized_coefficients_table>> n'est pas correct. <<penalized_coefficients_table>> doit être de type np.ndarray.")
 
         # Vérification de <<variables_selected>>
-        if not isinstance(variables_selected, list):
-            raise TypeError("Le type de <<variables_selected>> n'est pas correct. <<variables_selected>> doit être de type list.")
+        if not isinstance(variables_selected, (list, type(None))):
+            raise TypeError("Le type de <<variables_selected>> n'est pas correct. <<variables_selected>> doit être de type list ou None.")
 
         # Vérification de <<alpha_value>>
-        if not isinstance(alpha_value, float):
-            raise TypeError("Le type de <<alpha_value>> n'est pas correct. <<alpha_value>> doit être de type float.")
+        if not isinstance(alpha_value, (str, type(None))):
+            raise TypeError("Le type de <<alpha_value>> n'est pas correct. <<alpha_value>> doit être de type float, int ou None.")
 
         # Vérification de <<true_target>>
         if not isinstance(true_target, np.ndarray):
@@ -760,7 +799,6 @@ class Regularization():
             intercept_filter = penalized_coefficients_table["Variables"].isin(["Intercept"])
             intercept_value = penalized_coefficients_table.loc[intercept_filter, alpha_value][0]
             penalized_coefficients_shape = penalized_coefficients_table.shape[0] - 1
-
         else:
             intercept_value = 0
             penalized_coefficients_shape = penalized_coefficients_table.shape[0]
@@ -799,7 +837,7 @@ class Regularization():
     # Evolution des écarts-types
 
     # Fonction pour visualiser la relation entre les residus du modèle et les coefficients de régression
-    def Vizualisation_Residuals(self, list_beta_1, list_beta_2, predictors, target, penalized_coefficients_table, var_1, var_2, figure):
+    def Vizualisation_Residuals(self, list_beta_1, list_beta_2, predictors, target, penalized_coefficients_table, var_1, var_2, intercept, figure):
 
         '''
          Objectif:
@@ -862,6 +900,12 @@ class Regularization():
         if not {var_1, var_2}.issubset(set(predictors.columns.tolist())):
             raise ValueError(f"La valeurs de <<var_1>> et/ ou la valeur de <<var_2>> n'est pas correcte. <<var_1>> et <<var_2>> doivent prendre des valeurs parmi : {predictors.columns.tolist()}.")
 
+        if not isinstance(intercept, (float, int)):
+            raise TypeError("Le type de <<intercept>> n'est pas correct. <<intercept>> doit être de type float ou int.")
+
+        if not isinstance(figure, str):
+            raise TypeError("Le type de <<figure>> n'est pas correct. <<figure>> doit être de type str.")
+
         # Utilisation de la fonction rss_computing pour calculer la somme des carrés des résidus
         global rss_computing
 
@@ -878,7 +922,7 @@ class Regularization():
         for p in b1:
             i = 0
             for q in b2:
-                rss[i, j] = rss_computing(beta=[p, q], X=X_values, y=y_true, intercept=5)
+                rss[i, j] = rss_computing(beta=[p, q], X=X_values, y=y_true, intercept=intercept)
                 i += 1
             j += 1
         B1, B2 = np.meshgrid(b1, b2)
